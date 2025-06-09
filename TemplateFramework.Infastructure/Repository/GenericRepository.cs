@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,21 +15,35 @@ namespace TemplateFramework.Infastructure.Repository
     {
         protected readonly TemplateDbContext _context;
         protected readonly DbSet<T> _dbSet;
+        //private ILogger<GenericRepository<T>> _logger;
+        //private T Value;
 
         public GenericRepository(TemplateDbContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();
+            //_logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<T> GetByIdAsync(int id)
         {
-            return await _dbSet.FindAsync(id);
+            //_logger.LogInformation($"Get all{Value}");
+            try
+            {
+                var entities = await _dbSet.FindAsync(id);
+                //_logger.LogInformation($"Retrieved {entities} entities from the database.");
+                return entities;
+            }
+            catch
+            {
+                //_logger.LogError($"An error occurred while retrieving entity with ID {id}.");
+                throw;
+            }
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)

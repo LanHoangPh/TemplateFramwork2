@@ -40,7 +40,6 @@ namespace TemplateFramework.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductDto updateDto)
         {
-
             var updated = await _callProcedure.UpdateAsync(id, updateDto);
             return Ok(updated);
         }
@@ -48,7 +47,6 @@ namespace TemplateFramework.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            
            await _callProcedure.DeleteAsync(id);
            return NoContent();
             

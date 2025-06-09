@@ -25,6 +25,7 @@ namespace TemplateFramework.Application.DependencyInjection
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICallProcedureProduct, CallProcedureProduct>();
+            services.AddSingleton<MapperCustom>();
             return services;
         }
     }

@@ -12,7 +12,7 @@ namespace TemplateFramework.Infastructure.DependencyInjection
 {
     public static class ServerContainer
     {
-        public static IServiceCollection AddÌnastructureServices(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection AddInafstructureServices(this IServiceCollection services, IConfiguration config)
         {
             services.AddDbContext<TemplateDbContext>(options =>
             options.UseMySql(

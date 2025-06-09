@@ -29,10 +29,10 @@ namespace TemplateFramework.Infastructure.Repository
         {
             return await _dbSet.AnyAsync(u => u.Username == username);
         }
-        public async Task<User> GetCheckout(int id)
-        {
-            return await _dbSet.Include(u => u.RefreshTokens).OrderByDescending(rt => rt.CreatedAt)
-                .FirstOrDefaultAsync(u => u.Id == id);
-        }
+        //public async Task<User> GetCheckout(int id)
+        //{
+        //    return await _dbSet.Include(u => u.RefreshTokens).OrderByDescending(rt => rt.CreatedAt)
+        //        .FirstOrDefaultAsync(u => u.Id == id);
+        //}
     }
 }

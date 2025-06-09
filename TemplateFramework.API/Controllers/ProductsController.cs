@@ -10,16 +10,27 @@ namespace TemplateFramework.API.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _callProcedure;
-        public ProductsController(IProductService productService)
+        private readonly ILogger<ProductsController> _logger;
+        public ProductsController(IProductService productService, ILogger<ProductsController> logger)
         {
             _callProcedure = productService;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var products = await _callProcedure.GetAllAsync();
-            return Ok(products);
+            _logger.LogInformation("Fetching all products get:api/products");
+            try
+            {
+                var products = await _callProcedure.GetAllAsync();
+                return Ok(products);
+            }
+            catch
+            {
+                _logger.LogError("An error occurred while fetching all products get:api/products.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Internal server error");
+            }
         }
 
         [HttpGet("{id}")]

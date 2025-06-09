@@ -128,7 +128,7 @@ namespace TemplateFramework.Application.Services.Implements
             {
                 Token = refreshToken,
                 UserId = user.Id,
-                ExpiresAt = DateTime.UtcNow.AddDays(7), // 7 days
+                ExpiresAt = DateTime.UtcNow.AddDays(7),
                 CreatedAt = DateTime.UtcNow
             });
 

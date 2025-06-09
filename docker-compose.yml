@@ -1,0 +1,14 @@
+services:
+  webapi:
+    build:
+      dockerfile: TemplateFramework.API/Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Port=3306;Database=myframework_db;User=root;Password=230605;
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

@@ -62,7 +62,7 @@ namespace TemplateFramework.Infastructure.Data
                 .RuleFor(p => p.CreatedAt, f => f.Date.Past())
                 .RuleFor(p => p.UpdatedAt, f => f.Date.Recent());
 
-            var productsGenerator = fakerProduct.Generate(100);
+            var productsGenerator = fakerProduct.Generate(1000);
             modelBuilder.Entity<Products>().HasData(productsGenerator);
         }
     }

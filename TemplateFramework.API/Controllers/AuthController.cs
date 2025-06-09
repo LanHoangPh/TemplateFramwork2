@@ -31,6 +31,7 @@ namespace TemplateFramework.API.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("refresh")]
         public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
         {
