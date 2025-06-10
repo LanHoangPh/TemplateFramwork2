@@ -1,11 +1,5 @@
-﻿using Bogus.DataSets;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TemplateFramework.Domain.Entities;
 using TemplateFramework.Domain.Interfaces;
 using TemplateFramework.Infastructure.Data;

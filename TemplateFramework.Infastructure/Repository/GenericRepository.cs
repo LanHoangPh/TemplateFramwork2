@@ -1,12 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using TemplateFramework.Domain.Interfaces;
+using TemplateFramework.Domain.Page;
 using TemplateFramework.Infastructure.Data;
 
 namespace TemplateFramework.Infastructure.Repository
@@ -15,35 +12,35 @@ namespace TemplateFramework.Infastructure.Repository
     {
         protected readonly TemplateDbContext _context;
         protected readonly DbSet<T> _dbSet;
-        //private ILogger<GenericRepository<T>> _logger;
-        //private T Value;
+        private readonly IDbConnection _dbConnection;
+        private readonly string _tableName;
 
         public GenericRepository(TemplateDbContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();
-            //_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _dbConnection = _context.Database.GetDbConnection();
+            _tableName = context.Model.FindEntityType(typeof(T))?.GetTableName()
+                         ?? throw new InvalidOperationException($"Table name for entity type {typeof(T).Name} could not be determined.");
         }
 
         public async Task<T> GetByIdAsync(int id)
         {
-            //_logger.LogInformation($"Get all{Value}");
             try
             {
-                var entities = await _dbSet.FindAsync(id);
-                //_logger.LogInformation($"Retrieved {entities} entities from the database.");
-                return entities;
+                var query = $"SELECT * FROM {_tableName} WHERE Id = @pId"; // query
+                var entities = await _dbConnection.QuerySingleOrDefaultAsync<T>(query, new { pId = id }); // ORM wwith dapperr
+                return entities!;
             }
-            catch
+            catch (Exception ex)
             {
-                //_logger.LogError($"An error occurred while retrieving entity with ID {id}.");
-                throw;
+                throw new Exception($"Error retrieving entity by ID {id}: {ex.Message}", ex);
             }
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _dbSet.AsNoTracking().ToListAsync();
+            return await _dbConnection.QueryAsync<T>($"SELECT * FROM {_tableName}");
         }
 
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
@@ -78,6 +75,70 @@ namespace TemplateFramework.Infastructure.Repository
         public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AnyAsync(predicate);
+        }
+
+        public async Task<PagedResult<T>> GetPagedEFcoreAsync(int pageNumber, int pageSize, Expression<Func<T, bool>>? predicate = null)
+        {
+            var query = _dbSet.AsNoTracking();
+
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+            var primaryKeyName = _context.Model.FindEntityType(typeof(T))!.FindPrimaryKey()!.Properties.First().Name;
+
+            var totalRecords = await query.CountAsync();
+            var items = await query.OrderBy(e => EF.Property<object>(e, "Id"))
+                                   .Skip((pageNumber - 1) * pageSize)
+                                   .Take(pageSize)
+                                   .ToListAsync();
+
+            return new PagedResult<T>
+            {
+                Items = items,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalRecords = totalRecords
+            };
+        }
+
+        public async Task<PagedResult<T>> GetPagedDapperAsync(int pageNumber, int pageSize, string? oderbyColum, bool ascending = true)
+        {
+            var primaryKeyName = _context.Model.FindEntityType(typeof(T))!.FindPrimaryKey()!.Properties.First().Name;
+
+            oderbyColum ??= primaryKeyName; // nếu oderbyColum null thì sử dụng khóa chính
+
+            var validColumns = _context.Model.FindEntityType(typeof(T))!
+            .GetProperties().Select(p => p.Name).ToList();
+
+            if (!validColumns.Contains(oderbyColum, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Invalid column name for ordering: {oderbyColum}");
+            }
+
+            var sortDirection = ascending ? "ASC" : "DESC";
+
+            var offset = (pageNumber - 1) * pageSize;
+
+            var sql = $@"
+                SELECT COUNT(*) FROM `{_tableName}`;
+                SELECT * FROM `{_tableName}` 
+                ORDER BY `{oderbyColum}` {sortDirection}
+                LIMIT @PageSize OFFSET @Offset;";
+
+            using (var multi = await _dbConnection.QueryMultipleAsync(sql, new { PageSize = pageSize, Offset = offset }))
+            {
+                var totalRecords = await multi.ReadFirstAsync<int>();
+                var items = await multi.ReadAsync<T>();
+
+                return new PagedResult<T>
+                {
+                    Items = items,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalRecords = totalRecords
+                };
+            }
         }
     }
 }

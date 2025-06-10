@@ -1,10 +1,5 @@
 ﻿using Bogus;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TemplateFramework.Domain.Entities;
 
 namespace TemplateFramework.Infastructure.Data
@@ -53,17 +48,17 @@ namespace TemplateFramework.Infastructure.Data
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
-            var fake = new Faker("en") { Random = new Randomizer(123) };
-            var fakerProduct = new Faker<Products>("en")
-                .RuleFor(p => p.Id, f => (f.IndexFaker + 1))
-                .RuleFor(p => p.Name, f => f.Commerce.ProductName())
-                .RuleFor(p => p.Description, f => f.Lorem.Sentence())
-                .RuleFor(p => p.Price, f => f.Finance.Amount(10, 1000))
-                .RuleFor(p => p.CreatedAt, f => f.Date.Past())
-                .RuleFor(p => p.UpdatedAt, f => f.Date.Recent());
+            //var fake = new Faker("en") { Random = new Randomizer(123) };
+            //var fakerProduct = new Faker<Products>("en")
+            //    .RuleFor(p => p.Id, f => (f.IndexFaker + 1))
+            //    .RuleFor(p => p.Name, f => f.Commerce.ProductName())
+            //    .RuleFor(p => p.Description, f => f.Lorem.Sentence())
+            //    .RuleFor(p => p.Price, f => f.Finance.Amount(10, 1000))
+            //    .RuleFor(p => p.CreatedAt, f => f.Date.Past())
+            //    .RuleFor(p => p.UpdatedAt, f => f.Date.Recent());
 
-            var productsGenerator = fakerProduct.Generate(1000);
-            modelBuilder.Entity<Products>().HasData(productsGenerator);
+            //var productsGenerator = fakerProduct.Generate(100);
+            //modelBuilder.Entity<Products>().HasData(productsGenerator);
         }
     }
 }

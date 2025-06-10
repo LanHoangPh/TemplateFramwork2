@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging;
 using TemplateFramework.Application.DTOs.Products;
 using TemplateFramework.Application.Responses;
 using TemplateFramework.Application.Services.Interfaces;
 using TemplateFramework.Domain.Entities;
 using TemplateFramework.Domain.Interfaces;
+using TemplateFramework.Domain.Page;
 
 namespace TemplateFramework.Application.Services.Implements
 {
@@ -11,19 +13,30 @@ namespace TemplateFramework.Application.Services.Implements
     {
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<ProductService> _logger;
 
-        public ProductService(IProductRepository productRepository, IMapper mapper)
+        public ProductService(IProductRepository productRepository, IMapper mapper, ILogger<ProductService> logger)
         {
             _productRepository = productRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<ProductResponse> GetByIdAsync(int id)
         {
-            var product = await _productRepository.GetByIdAsync(id);
-            if (product == null) throw new KeyNotFoundException("Product not found");
+            try
+            {
+                _logger.LogInformation("Start mapper product with ID: {Id}", id);
+                var product = await _productRepository.GetByIdAsync(id);
+                if (product == null) throw new KeyNotFoundException("Product not found");
 
-            return _mapper.Map<ProductResponse>(product);
+                return _mapper.Map<ProductResponse>(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting product by ID: {Id}", id);
+                throw;
+            }
         }
 
         public async Task<IEnumerable<ProductResponse>> GetAllAsync()
@@ -60,6 +73,36 @@ namespace TemplateFramework.Application.Services.Implements
             if (product == null) throw new KeyNotFoundException("Product not found");
 
             await _productRepository.DeleteAsync(product);
+        }
+
+        public async Task<PagedResult<ProductResponse>> GetPagedProductsAsync(int pageNumber, int pageSize)
+        {
+            var pagedProducts = await _productRepository.GetPagedEFcoreAsync(pageNumber, pageSize, null);
+
+            var productResponses = _mapper.Map<IEnumerable<ProductResponse>>(pagedProducts.Items);
+
+            return new PagedResult<ProductResponse>
+            {
+                Items = productResponses,
+                PageNumber = pagedProducts.PageNumber,
+                PageSize = pagedProducts.PageSize,
+                TotalRecords = pagedProducts.TotalRecords
+            };
+        }
+
+        public async Task<PagedResult<ProductResponse>> GetPagedProductsDapperAsync(int pageNumber, int pageSize, string oderbyColum)
+        {
+            var pagedProducts = await _productRepository.GetPagedDapperAsync(pageNumber, pageSize, oderbyColum, true);
+
+            var productResponses = _mapper.Map<IEnumerable<ProductResponse>>(pagedProducts.Items);
+
+            return new PagedResult<ProductResponse>
+            {
+                Items = productResponses,
+                PageNumber = pagedProducts.PageNumber,
+                PageSize = pagedProducts.PageSize,
+                TotalRecords = pagedProducts.TotalRecords
+            };
         }
     }
 }

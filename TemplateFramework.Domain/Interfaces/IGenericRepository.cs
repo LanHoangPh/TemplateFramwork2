@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using TemplateFramework.Domain.Entities;
+using TemplateFramework.Domain.Page;
 
 namespace TemplateFramework.Domain.Interfaces
 {
@@ -17,5 +19,7 @@ namespace TemplateFramework.Domain.Interfaces
         Task UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+        Task<PagedResult<T>> GetPagedEFcoreAsync(int pageNumber, int pageSize, Expression<Func<T, bool>>? predicate);
+        Task<PagedResult<T>> GetPagedDapperAsync(int pageNumber, int pageSize, string? oderbyColum, bool ascending);
     }
 }

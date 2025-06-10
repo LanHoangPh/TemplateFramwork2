@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.Text;
 using TemplateFramework.Domain.Interfaces;
 using TemplateFramework.Infastructure.Data;
@@ -14,12 +15,15 @@ namespace TemplateFramework.Infastructure.DependencyInjection
     {
         public static IServiceCollection AddInafstructureServices(this IServiceCollection services, IConfiguration config)
         {
+            var connectionString = config.GetConnectionString("DefaultConnection");
             services.AddDbContext<TemplateDbContext>(options =>
             options.UseMySql(
                 config.GetConnectionString("DefaultConnection"),
-                ServerVersion.AutoDetect(config.GetConnectionString("DefaultConnection")!)
+                ServerVersion.AutoDetect(connectionString)
             ));
-            var jwtSettings = config.GetSection("Jwt");
+            services.AddScoped<IDbConnection>(sp =>
+                    sp.GetRequiredService<TemplateDbContext>().Database.GetDbConnection());
+                        var jwtSettings = config.GetSection("Jwt");
             var secretKey = jwtSettings["SecretKey"] ?? throw new ArgumentNullException("Jwt:SecretKey");
 
             services.AddAuthentication(options =>
